@@ -407,6 +407,58 @@ class DeviceRxHashLevel:
         )
 
 
+class DeviceStatistics:
+    # ethtool -S eth0
+    #   NIC statistics:
+    #       tx_scattered: 0
+    #       tx_no_memory: 0
+    #       tx_no_space: 0
+    #       tx_too_big: 0
+    #       tx_busy: 0
+    #       tx_send_full: 0
+    #       rx_comp_busy: 0
+    #       rx_no_memory: 0
+    #       stop_queue: 0
+    #       wake_queue: 0
+    #       vf_rx_packets: 0
+    #       vf_rx_bytes: 0
+    #       vf_tx_packets: 0
+    #       vf_tx_bytes: 0
+    #       vf_tx_dropped: 0
+    #       tx_queue_0_packets: 409
+    #       tx_queue_0_bytes: 117658
+    #       rx_queue_0_packets: 219
+    #       rx_queue_0_bytes: 66487
+    #       tx_queue_1_packets: 207
+    #       tx_queue_1_bytes: 53997
+    #       rx_queue_1_packets: 241
+    #       rx_queue_1_bytes: 80479
+
+    _device_stats_pattern = re.compile(r"NIC statistics:\s+(?P<value>.*?)?$", re.DOTALL)
+    _per_cpu_stats_pattern = re.compile(
+        r"^\s+(?P<name>.*_queue_.*):\s+?(?P<value>.*?)?$", re.MULTILINE
+    )
+
+    def __init__(self, interface: str, raw_str: str) -> None:
+        self._parse_statistics(interface, raw_str)
+
+    def _parse_statistics(self, interface: str, raw_str: str) -> None:
+        device_stats = self._device_stats_pattern.search(raw_str)
+        if not device_stats:
+            raise LisaException(
+                f"No statistics information found for device {interface}."
+            )
+
+        per_cpu_stats = self._per_cpu_stats_pattern.search(raw_str)
+        if not per_cpu_stats:
+            raise LisaException(
+                f"No per cpu statistics information found for device {interface}."
+            )
+
+        self.interface = interface
+        self.device_stats = device_stats.group("value")
+
+
 class DeviceSettings:
     def __init__(
         self,
@@ -827,6 +879,13 @@ class Ethtool(Tool):
 
         return self.get_device_rx_hash_level(interface, protocol, force=True)
 
+    def get_device_statistics(self, interface: str) -> DeviceStatistics:
+        result = self.run(f"-S {interface}", force_run=True)
+        result.assert_exit_code(message=f"Couldn't get device {interface} statistics.")
+
+        device_statistics = DeviceStatistics(interface, result.stdout)
+        return device_statistics
+
     def get_all_device_channels_info(self) -> List[DeviceChannel]:
         devices_channel_list = []
         devices = self.get_device_list()
@@ -885,3 +944,11 @@ class Ethtool(Tool):
             )
 
         return devices_rx_hash_level
+
+    def get_all_device_statistics(self) -> List[DeviceStatistics]:
+        devices_statistics = []
+        devices = self.get_device_list()
+        for device in devices:
+            devices_statistics.append(self.get_device_statistics(device))
+
+        return devices_statistics

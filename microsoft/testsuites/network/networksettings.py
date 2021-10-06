@@ -384,3 +384,23 @@ class NetworkSettings(TestSuite):
                     f"Reverting RX hash level for {protocol} to original value"
                     " didn't succeed",
                 ).is_equal_to(original_hlevel)
+
+    @TestCaseMetadata(
+        description="""
+            This test case verifies that device statistics can be captured.
+
+            Steps:
+                Note: Same steps are used for both TCP and UDP.
+            1. Get all the device's statistics.
+            2. Validate device statistics lists per cpu statistics as well.
+        """,
+        priority=2,
+    )
+    def validate_device_statistics(self, node: Node, log: Logger) -> None:
+        ethtool = node.tools[Ethtool]
+        devices_statistics = ethtool.get_all_device_statistics()
+
+        for stats in devices_statistics:
+            assert_that(
+                stats.device_stats, f"Statistics for {stats.interface} are empty"
+            ).is_not_empty()
