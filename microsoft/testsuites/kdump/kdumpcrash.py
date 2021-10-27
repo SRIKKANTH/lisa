@@ -88,13 +88,13 @@ class KdumpCrash(TestSuite):
 
     @TestCaseMetadata(
         description="""
-        This test case verfies if the kdump is effect when VM has 2~8 cpus, and
+        This test case verfies if the kdump is effect when VM has at least 2 cpus, and
         trigger kdump on the second cpu(cpu1), which is designed by a known issue.
         The test steps are same as `kdumpcrash_validate_single_core`.
         """,
         priority=2,
         requirement=node_requirement(
-            node=schema.NodeSpace(core_count=search_space.IntRange(min=2, max=8))
+            node=schema.NodeSpace(core_count=search_space.IntRange(min=2))
         ),
     )
     def kdumpcrash_validate_smp(self, node: Node, log: Logger) -> None:
@@ -102,13 +102,13 @@ class KdumpCrash(TestSuite):
 
     @TestCaseMetadata(
         description="""
-        This test case verfies if the kdump is effect when VM has 33~192 cpus and
+        This test case verfies if the kdump is effect when VM has at least 33 cpus and
         trigger kdump on the 33th cpu(cpu32), which is designed by a known issue.
         The test steps are same as `kdumpcrash_validate_single_core`.
         """,
         priority=2,
         requirement=node_requirement(
-            node=schema.NodeSpace(core_count=search_space.IntRange(min=33, max=192))
+            node=schema.NodeSpace(core_count=search_space.IntRange(min=33))
         ),
     )
     def kdumpcrash_validate_on_cpu32(self, node: Node, log: Logger) -> None:
@@ -116,13 +116,13 @@ class KdumpCrash(TestSuite):
 
     @TestCaseMetadata(
         description="""
-        This test case verfies if the kdump is effect when VM has 193~415 cpus, and
+        This test case verfies if the kdump is effect when VM has at least 193 cpus, and
         trigger kdump on the 193th cpu(cpu192), which is designed by a known issue.
         The test steps are same as `kdumpcrash_validate_single_core`.
         """,
         priority=2,
         requirement=node_requirement(
-            node=schema.NodeSpace(core_count=search_space.IntRange(min=193, max=415))
+            node=schema.NodeSpace(core_count=search_space.IntRange(min=193))
         ),
     )
     def kdumpcrash_validate_on_cpu192(self, node: Node, log: Logger) -> None:
