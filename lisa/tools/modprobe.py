@@ -1,6 +1,5 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
-
 from typing import Any
 
 from lisa.executable import Tool
@@ -43,3 +42,27 @@ class Modprobe(Tool):
         )
 
         return not (could_be_loaded or does_not_exist)
+
+    def remove(
+        self,
+        mod_name: str,
+    ) -> None:
+        self.run(
+            f"-r {mod_name}",
+            force_run=True,
+            sudo=True,
+            expected_exit_code=0,
+            expected_exit_code_failure_message=f"Fail to remove module {mod_name}",
+        )
+
+    def load(
+        self,
+        mod_name: str,
+    ) -> None:
+        self.run(
+            f"{mod_name}",
+            force_run=True,
+            sudo=True,
+            expected_exit_code=0,
+            expected_exit_code_failure_message=f"Fail to load module {mod_name}",
+        )
