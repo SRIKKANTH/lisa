@@ -6,7 +6,7 @@ from typing import Any, Dict, List
 from lisa.executable import Tool
 from lisa.operating_system import Posix
 from lisa.tools import Echo
-from lisa.util import LisaException, constants
+from lisa.util import LisaException, constants, find_patterns_in_lines
 
 # Example output of lspci command -
 # lspci -m
@@ -115,3 +115,20 @@ class Lspci(Tool):
         self.node.tools[Echo].write_to_file(
             "1", self.node.get_pure_path("/sys/bus/pci/rescan"), sudo=True
         )
+
+    def get_used_module(self, slot: str, force_run: bool = False) -> str:
+        if force_run:
+            result = self.run(f"-nks {slot}", force_run=force_run, shell=True)
+            if result.exit_code != 0:
+                result = self.run("-nks", force_run=force_run, shell=True, sudo=True)
+                if result.exit_code != 0:
+                    raise LisaException(
+                        f"get unexpected non-zero exit code {result.exit_code} "
+                        f"when run {self.command} -nks {slot}."
+                    )
+        matched = find_patterns_in_lines(
+            result.stdout, [re.compile(r"Kernel driver in use: (.*)\r", re.M)]
+        )
+        assert matched and matched[0]
+        assert isinstance(matched[0][0], str)
+        return matched[0][0]
