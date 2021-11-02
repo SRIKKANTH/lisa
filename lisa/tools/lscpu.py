@@ -172,6 +172,12 @@ class Lscpu(Tool):
             )
         return output
 
+    def is_virtualization_enabled(self) -> bool:
+        result = self.run()
+        if "VT-x" in result.stdout:
+            return True
+        return False
+
 
 class WindowsLscpu(Lscpu):
     @property
